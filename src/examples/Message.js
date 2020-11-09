@@ -54,6 +54,6 @@ draw: () => {
 onMessage: (e) => {
   synth.osc( Math.random() ).out()
 },
-update: () => {
+update: async () => {
 }
 `

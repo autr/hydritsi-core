@@ -45,5 +45,12 @@ draw: () => {
   p5.fill( 0 )
   p5.circle( w/2, h/2, h/2)
 
+},
+update: async () => {
+  
+  // M A C H I N E L E A R N I N G
+
+  // nothing to do here
+
 }
 `

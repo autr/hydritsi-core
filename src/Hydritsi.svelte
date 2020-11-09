@@ -3,13 +3,14 @@
 // import * as bodyPix from '@tensorflow-models/body-pix';
 // import * as blazeFace from '@tensorflow-models/blazeface';
 // import * as faceapi from 'face-api.js';
+import * as blazeFaceEngine from '@tensorflow-models/blazeface';
 
 
 import { onMount } from 'svelte';
 import p5Engine from 'p5';
 import CodeEditor from 'svelte-code-editor';
 import Prism from 'prismjs';
-import Example from './examples/Message.js';
+import Example from './examples/Faces.js';
 
 let capabilities = [
   {
@@ -51,14 +52,28 @@ let inputVideo,
     faceapi, 
     streams, 
     messages,
-    p5;
+    p5,
+    store;
+
+
+
+let blazeFace = null;
+let isSetup = false;
+
+let helper = {
+  getFastFace: async ( video ) => {
+    if ( !blazeFace ) {
+      console.log("[Hydritsi 🐙] 🤦‍♀️ loading blaze face...");
+      setKonsole('info', 'loading face model');
+      blazeFace = await blazeFaceEngine.load();
+      setKonsole('success', 'face model loaded');
+    }
+    return await blazeFace.estimateFaces( video, false);
+  }
+}
 
 let config = {
     autoScale: true
-}
-
-let store = {
-    faceApiLoaded: false
 }
 
 let lastX, lastY, timestamp, dt = 0;
@@ -70,7 +85,6 @@ onMount(async () => {
   console.log('[Hydritsi 🐙] App mounted!');
 
   window.limpit = limpit;
-  window.store = store;
   window.config = config;
 
   window.inputVideo = inputVideo = null;
@@ -80,6 +94,7 @@ onMount(async () => {
   window.faceapi = faceapi = faceapi;
   window.streams = streams = [];
   window.messages = messages = [];
+  window.store = store = {};
 
   window.p5 = p5 = new p5Engine( setupP5 );
 
@@ -93,7 +108,7 @@ let konsole = {
   flash: false
 };
 
-function setConsole( type, message ) {
+function setKonsole( type, message ) {
   const d = new Date();
   const zero = (i) => (i < 10) ? "0" + i : i;
   konsole = {
@@ -111,7 +126,8 @@ function setConsole( type, message ) {
 const limpit  = {
 
   update: async function( inputVideo, outputCanvas  ) {
-      if (!store.faceApiLoaded) {
+
+      // if (!store.faceApiLoaded) {
 
           // faceapi.nets.ssdMobilenetv1.isLoaded
           // faceapi.nets.faceLandmark68Net.isLoaded
@@ -123,14 +139,20 @@ const limpit  = {
           // store.faceApiLoaded = true;
 
           // console.log('[Hydritsi 🐙] face api loaded!');
-      }
+      // }
 
-      // update...
-      try {
-          await window.sketch.update( this.p5, inputVideo, outputCanvas );
-      } catch(err) {
+    // update...
+    if (!isSetup) return;
+    try {
+        await window.sketch.update();
+        lastUpdateError = false;
+    } catch(err) {
+        if (!lastUpdateError) {
           console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch update...", err.message);
-      }  
+          lastUpdateError = true;
+          setKonsole('error', err.message);
+        }
+    }  
 
   },
 
@@ -142,7 +164,8 @@ const limpit  = {
       window.inputVideo = inputVideo = null;
       window.outputCanvas = outputCanvas = null;
       window.hydra = hydra = null;
-      setConsole('success', 'disabled hydritsi...');
+      setKonsole('success', 'disabled hydritsi...');
+      isSetup = false;
   },
   enable: function( e ) {
 
@@ -158,7 +181,7 @@ const limpit  = {
           setTimeout( evaluate, 10);
       }
 
-      setConsole('success', 'enabled hydritsi...');
+      setKonsole('success', 'enabled hydritsi...');
   },
   attach: function(e) {
       console.log('[Hydritsi 🐙] 🎬  attaching video...', e);
@@ -208,16 +231,16 @@ function evaluate( e ) {
       try {
 
           const c = `window.sketch = { ${temp} };`;
-          console.log('[Hydritsi 🐙] 🔧 👶  evaluating new sketch code...', c);
+          console.log('[Hydritsi 🐙] 🔧 👶  evaluating new sketch code...');
           eval( c);
           success = true;
           errorMessage = false;
-          setConsole('success', 'sketch successfully reloaded');
+          setKonsole('success', 'sketch successfully reloaded');
           console.log('[Hydritsi 🐙] 🔧 👶 ✅  successfully updated sketch code...');
 
       } catch( err) {
 
-          setConsole('error', err.message);
+          setKonsole('error', err.message);
           console.log('.........', err, err.stack)
           console.log("[Hydritsi 🐙] 🔧 👶 ❌  couldn't eval new sketch code...", err.message, '\n', err.stack);
           try {
@@ -239,16 +262,16 @@ function evaluate( e ) {
 
       lastP5DrawError = false;
       lastP5HydraError = false;
+      lastUpdateError = false;
 
       try {
-          if (hydra) {
-            console.log('[Hydritsi 🐙] 🔧  running sketch setup...');
-            window.sketch.setup();
-          }
+        console.log('[Hydritsi 🐙] 🔧  running sketch setup...');
+        window.sketch.setup();
+        isSetup = true;
       } catch( err ) {
         console.log("[Hydritsi 🐙] 🔧 ❌  couln't run sketch setup:", err.message, err.stack);
         errorMessage = err.message;
-        setConsole('error', err.message);
+        setKonsole('error', err.message);
       }
     }
   }, 750);
@@ -257,7 +280,7 @@ function evaluate( e ) {
 }
 
 
-let lastP5DrawError, lastP5HydraError;
+let lastP5DrawError, lastP5HydraError, lastUpdateError;
 
 function setupP5( p ) {
 
@@ -271,6 +294,7 @@ function setupP5( p ) {
 
       }
       p.draw = () => { 
+
 
           const t = Date.now();
           dt = t - timestamp;
@@ -299,16 +323,18 @@ function setupP5( p ) {
               }
 
               // EZ-access draw...
-
-              try {
-                  window.sketch.draw( )
-                  lastP5DrawError = false;
-              } catch( err ) {
-                if (!lastP5DrawError) {
-                  console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch draw function...", err.message, window.sketch);
-                  setConsole('error', err.message);
-                  lastP5DrawError = true;
+              if (isSetup) {
+                try {
+                    window.sketch.draw( )
+                    lastP5DrawError = false;
+                } catch( err ) {
+                  if (!lastP5DrawError) {
+                    console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch draw function...", err.message, window.sketch);
+                    setKonsole('error', err.message);
+                    lastP5DrawError = true;
+                  }
                 }
+
               }
 
               if (hydra) {
@@ -320,7 +346,7 @@ function setupP5( p ) {
                     if (!lastP5HydraError) {
                       console.log("[Hydritsi 🐙] 🚨 ❌  couldn't render hydra...", err.message);
                       lastP5HydraError = true;
-                      setConsole('error', err.message);
+                      setKonsole('error', err.message);
                     }
                   }
               }

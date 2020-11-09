@@ -14,6 +14,11 @@
     });
   });
 
+  function onFrame() {
+    window.limpit.update();
+    window.requestAnimationFrame( onFrame );
+    
+  }
 
   function attach( ){
     console.log('[Hydritsi 🐞]  attaching to hydritsi...', limpit);
@@ -45,6 +50,8 @@
     } else {
       alert('SSL is needed for mediaDevices')
     }
+
+    window.requestAnimationFrame( onFrame );
 
   });
 </script>
