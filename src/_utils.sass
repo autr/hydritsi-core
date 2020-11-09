@@ -1,0 +1,215 @@
+@mixin fill()
+  content: ""
+  display: block
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+
+@function mono($l)
+  @return hsl(0,0%,$l)
+
+.align-right
+  text-align: right
+.align-left
+  text-align: left
+.align-center
+  text-align: center
+.italic
+  font-style: italic
+
+@for $i from 0 through 8 
+  .pt#{$i}
+    padding-top: #{$i}em
+  .pr#{$i}
+    padding-right: #{$i}em
+  .pb#{$i}
+    padding-bottom: #{$i}em
+  .pl#{$i}
+    padding-left: #{$i}em
+  .mt#{$i}
+    margin-top: #{$i}em
+  .mr#{$i}
+    margin-right: #{$i}em
+  .mb#{$i}
+    margin-bottom: #{$i}em
+  .ml#{$i}
+    margin-left: #{$i}em
+  .mtb#{$i}, .mbt
+    margin-top: #{$i}em
+    margin-bottom: #{$i}em
+  .ptb#{$i}, .pbt
+    padding-top: #{$i}em
+    padding-bottom: #{$i}em
+
+
+@for $i from 1 through 10
+  .clamp#{2 * $i}
+    // overflow: hidden
+    // text-overflow: ellipsis
+    // display: block
+    // max-height: #{4 * $i}em
+    display: -webkit-box
+    -webkit-box-orient: vertical
+    -webkit-line-clamp: #{2 * $i}
+    text-overflow: ellipsis
+    overflow: hidden
+
+.visible
+  opacity: 1
+.invisible
+  opacity: 0
+.inline-block
+  display: inline-block
+.block
+  display: block
+.none
+  display: none
+.relative
+  position: relative
+.absolute
+  position: absolute
+.fill
+  @include fill()
+
+
+
+.light
+  font-weight: light
+.lighter
+  font-weight: lighter
+.normal
+  font-weight: normal
+.bold
+  font-weight: bold
+.bolder
+  font-weight: bolder
+
+
+.field
+  margin-bottom: 20px
+  &.disabled
+    opacity: 0.5
+  .errors 
+    text-transform: lowercase
+
+
+
+
+.text-wrapper, .textarea
+  display: block
+  width: 100%
+  margin: 0
+  box-sizing: border-box
+  padding: 0
+  margin-top: -1px
+  input[type=text], textarea
+    background: transparent
+    box-sizing: border-box
+    border: 0
+    box-sizing: border-box
+    padding: 10px 10px
+    width: 100%
+    margin: 0
+    outline: 0
+    display: block
+    vertical-align: middle
+    &:invalid, &[aria-invalid=true]
+      border-color: red!important
+      color: red
+      &::placeholder
+        color: red
+      &+.errors
+        color: red
+    &:focus
+      box-shadow: 0 0 3px 0px white
+
+
+@media only screen and (max-width: 48em)
+  .mobile-hide
+    display: none!important
+  .mobile-invisible
+    opacity: 0!important
+@media only screen and (min-width: 48em)
+  .mobile-show
+    display: none!important
+  .mobile-visible
+    opacity: 1!important
+@media only screen and (max-width: 64em)
+  .tablet-hide
+    display: none!important
+  .tablet-invisible
+    opacity: 0!important
+@media only screen and (min-width: 64em)
+  .tablet-show
+    display: none!important
+  .tablet-visible
+    opacity: 1!important
+
+
+
+
+@mixin generateFontSizes($fontSize, $ratio: 1.61803398875)
+  $fontRatios: 0.785714, 1, 1.2857, 1.64285, 2.071428, 2.642857
+  font-size: $fontSize
+  line-height: $fontSize * $ratio
+  @for $i from 1 through length( $fontRatios )
+    .f#{$i}
+      $fSize: $fontSize * nth( $fontRatios, $i )
+      font-size: $fSize
+      line-height: $fSize * 1.61803398875
+
+
+@mixin generateTags($name, $colorA, $colorB, $filledFontColor: white, $border: 5px, $radius: 0px)
+  .tag.#{$name}.filled
+    background-color: $colorA
+    color: $filledFontColor
+    border-radius: $radius
+    &:hover
+      background-color: $colorB
+      color: $filledFontColor
+  .tag#{$name}.drop
+    &:before
+      border-color: $colorA
+      border-right-width: $border
+      border-bottom-width: $border
+      left: $border
+      top: $border
+    color: $colorA
+    &:hover
+      &:before
+        border-color: $colorB
+      color: $colorB
+  .tag#{$name}.outline
+    border: $border solid $colorA
+  .tag#{$name}.underline
+    border-bottom: $border solid $colorA
+  .tag#{$name}.outline, .tag#{$name}.underline
+    color: $colorA
+    border-radius: $radius
+    &:hover
+      border-color: $colorB
+      color: $colorB
+
+
+
+.tag
+  $radius: 0px
+  $stripe: 3px
+  padding: 0em 1em
+  position: relative
+  display: inline-block
+  border-radius: $radius
+  transition: border-color 0.2s ease, color 0.2s ease
+  *, *:before, &:before
+    border-radius: $radius
+  &.filled
+    color: white
+  &.drop
+    &:before
+      content: ""
+      box-sizing: border-box
+      @include fill()
+      border: 0px solid transparent
+      border-style: solid
