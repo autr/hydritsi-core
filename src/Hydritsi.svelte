@@ -1,0 +1,404 @@
+<script>
+
+// import * as bodyPix from '@tensorflow-models/body-pix';
+// import * as blazeFace from '@tensorflow-models/blazeface';
+// import * as faceapi from 'face-api.js';
+
+
+import { onMount } from 'svelte';
+import p5Engine from 'p5';
+import CodeEditor from 'svelte-code-editor';
+import Prism from 'prismjs';
+import Example from './examples/Message.js';
+
+let capabilities = [
+  {
+    name: '🐙  hydra-synth',
+    disabled: true,
+    value: true
+  },
+  {
+    name: '🔸  p5.js',
+    disabled: true,
+    value: true
+  },
+  {
+    name: '🗣  face-api',
+    disabled: false,
+    value: false
+  },
+  {
+    name: '🦾  tf-body',
+    disabled: false,
+    value: false
+  },
+  {
+    name: '🎶  tone.js',
+    disabled: false,
+    value: false
+  }
+]
+
+
+let debounce;
+let errorMessage = null;
+let temp, code = Example;
+
+let inputVideo, 
+    outputCanvas, 
+    hydra,
+    synth,
+    faceapi, 
+    streams, 
+    messages,
+    p5;
+
+let config = {
+    autoScale: true
+}
+
+let store = {
+    faceApiLoaded: false
+}
+
+let lastX, lastY, timestamp, dt = 0;
+
+
+
+onMount(async () => {
+
+  console.log('[Hydritsi 🐙] App mounted!');
+
+  window.limpit = limpit;
+  window.store = store;
+  window.config = config;
+
+  window.inputVideo = inputVideo = null;
+  window.outputCanvas = outputCanvas = null;
+  window.hydra = hydra = null;
+  window.synth = synth = null;
+  window.faceapi = faceapi = faceapi;
+  window.streams = streams = [];
+  window.messages = messages = [];
+
+  window.p5 = p5 = new p5Engine( setupP5 );
+
+
+}); 
+
+let konsole = {
+  type: 'info',
+  message: 'loading',
+  time: 'n/a',
+  flash: false
+};
+
+function setConsole( type, message ) {
+  const d = new Date();
+  const zero = (i) => (i < 10) ? "0" + i : i;
+  konsole = {
+    type,
+    message,
+    time: `${zero(d.getHours())}:${zero(d.getMinutes())}:${zero(d.getSeconds())}`,
+    flash: true
+  }
+
+  setTimeout( () => {
+    konsole.flash = false
+  }, 10)
+}
+
+const limpit  = {
+
+  update: async function( inputVideo, outputCanvas  ) {
+      if (!store.faceApiLoaded) {
+
+          // faceapi.nets.ssdMobilenetv1.isLoaded
+          // faceapi.nets.faceLandmark68Net.isLoaded
+          // faceapi.nets.faceExpressionNet.isLoaded
+
+          // await faceapi.nets.ssdMobilenetv1.load('/static/models/')
+          // await faceapi.loadFaceLandmarkModel('/static/models/')
+          // await faceapi.loadFaceExpressionModel('/static/models/')
+          // store.faceApiLoaded = true;
+
+          // console.log('[Hydritsi 🐙] face api loaded!');
+      }
+
+      // update...
+      try {
+          await window.sketch.update( this.p5, inputVideo, outputCanvas );
+      } catch(err) {
+          console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch update...", err.message);
+      }  
+
+  },
+
+
+  disable: function( e ) {
+
+      console.log('[Hydritsi 🐙] ✋  disabling hydritsi...', e);
+
+      window.inputVideo = inputVideo = null;
+      window.outputCanvas = outputCanvas = null;
+      window.hydra = hydra = null;
+      setConsole('success', 'disabled hydritsi...');
+  },
+  enable: function( e ) {
+
+      console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', e);
+
+      window.inputVideo = inputVideo = e.inputVideo;
+      window.outputCanvas = outputCanvas = e.outputCanvas;
+
+      if (!hydra) {
+          window.hydra = hydra = new Hydra({ canvas: e.outputCanvas, autoLoop: false });
+          window.hydra.setResolution(outputCanvas.width, outputCanvas.height)
+          window.synth = synth = hydra.synth;
+          setTimeout( evaluate, 10);
+      }
+
+      setConsole('success', 'enabled hydritsi...');
+  },
+  attach: function(e) {
+      console.log('[Hydritsi 🐙] 🎬  attaching video...', e);
+      streams.push( e );
+      try {
+          const refresh = window.sketch.onAttach( e );
+          console.log("[Hydritsi 🐙] 📺 ✅  attached processed", e);
+          if (refresh) evaluate();
+      } catch(err) {
+          console.log("[Hydritsi 🐙] 🎬 📍  sketch attach function not run (optional)...", err.message, e);
+      }  
+  },
+  detach: function(e) {
+      console.log('[Hydritsi 🐙] 📺  detaching video...', e);
+      streams = streams.filter( s => s.videoTrack.participantId != e.videoTrack.participantId );
+      try {
+          const refresh = window.sketch.onDetach( e );
+          console.log("[Hydritsi 🐙] 📺 ✅  detached processed", e);
+          if (refresh) evaluate();
+      } catch(err) {
+          console.log("[Hydritsi 🐙] 📺 📍  sketch detach function not run (optional)...", err.message, e);
+      }  
+  },
+  message: function(e) {
+      console.log('[Hydritsi 🐙] 💬  received message...', e);
+      messages.push( e );
+      try {
+          const refresh = window.sketch.onMessage( e );
+          console.log("[Hydritsi 🐙] 📺 ✅  message processed", e);
+          if (refresh) evaluate();
+      } catch(err) {
+          console.log("[Hydritsi 🐙] 💬 📍  sketch message function not run (optional)...", err.message, e);
+      }  
+
+  }
+}
+
+
+
+function evaluate( e ) {
+  if (e) code = e.detail
+  clearTimeout( debounce );
+  debounce = setTimeout( () => { 
+      console.log('[Hydritsi 🐙] 🔧  evaluating sketch code...');
+      temp = code;
+      let success = false;
+      try {
+
+          const c = `window.sketch = { ${temp} };`;
+          console.log('[Hydritsi 🐙] 🔧 👶  evaluating new sketch code...', c);
+          eval( c);
+          success = true;
+          errorMessage = false;
+          setConsole('success', 'sketch successfully reloaded');
+          console.log('[Hydritsi 🐙] 🔧 👶 ✅  successfully updated sketch code...');
+
+      } catch( err) {
+
+          setConsole('error', err.message);
+          console.log('.........', err, err.stack)
+          console.log("[Hydritsi 🐙] 🔧 👶 ❌  couldn't eval new sketch code...", err.message, '\n', err.stack);
+          try {
+              const c = `window.sketch = { ${code} };`;
+              console.log('[Hydritsi 🐙] 🔧 👵  evaluating old sketch code...');
+
+              eval( c );
+              success = true;
+              errorMessage = false;
+              console.log('[Hydritsi 🐙] 🔧 👵 ✅  fell back to original sketch code...');
+
+          } catch( err2 ) {
+            console.log("[Hydritsi 🐙] 🔧 👵 ❌  couldn't eval old sketch code...", err.message, '\n', err.stack);
+            errorMessage = err.message;
+          }
+      }
+
+    if (success) {
+
+      lastP5DrawError = false;
+      lastP5HydraError = false;
+
+      try {
+          if (hydra) {
+            console.log('[Hydritsi 🐙] 🔧  running sketch setup...');
+            window.sketch.setup();
+          }
+      } catch( err ) {
+        console.log("[Hydritsi 🐙] 🔧 ❌  couln't run sketch setup:", err.message, err.stack);
+        errorMessage = err.message;
+        setConsole('error', err.message);
+      }
+    }
+  }, 750);
+
+
+}
+
+
+let lastP5DrawError, lastP5HydraError;
+
+function setupP5( p ) {
+
+      p.setup = () => { 
+
+          console.log('[Hydritsi 🐙] 🚨  setting up p5...', window.sketch);
+          p5.createCanvas(640, 360);
+
+          // this.loadTensorFlow();
+
+
+      }
+      p.draw = () => { 
+
+          const t = Date.now();
+          dt = t - timestamp;
+
+          // only draw P5 if outputCanvas from JitsiBlurEffect.js has been inited...
+
+
+          if (outputCanvas) {
+
+              p5.clear();
+              p5.background(0);
+
+              // scale everything to outputCanvas:
+              // makes things simpler when drawing video tracks, or CV outputs...
+
+              if (config.autoScale) {
+                  let x, y;
+                  x = p5.width / outputCanvas.width;
+                  y = p5.height / outputCanvas.height;
+                  if ( x != lastX || y != lastY ) {
+                      console.log("[Hydritsi 🐙] 🚨  autoscaling to:", x, y);
+                      p5.scale( x, y );
+                      lastX = x;
+                      lastY = y;
+                  }
+              }
+
+              // EZ-access draw...
+
+              try {
+                  window.sketch.draw( )
+                  lastP5DrawError = false;
+              } catch( err ) {
+                if (!lastP5DrawError) {
+                  console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch draw function...", err.message, window.sketch);
+                  setConsole('error', err.message);
+                  lastP5DrawError = true;
+                }
+              }
+
+              if (hydra) {
+
+                  try {
+                      hydra.tick( dt  )
+                      lastP5HydraError = false;
+                  } catch( err ) {
+                    if (!lastP5HydraError) {
+                      console.log("[Hydritsi 🐙] 🚨 ❌  couldn't render hydra...", err.message);
+                      lastP5HydraError = true;
+                      setConsole('error', err.message);
+                    }
+                  }
+              }
+          }
+
+          timestamp = t;
+      }
+}
+
+
+</script>
+<header class="header">
+  <div class="actions">
+    {#each capabilities as opt}
+      <!-- <button class:active={opt.value} disabled={opt.disabled} on:click={ e => opt.value = !opt.value}>
+        {opt.name}
+      </button> -->
+    {/each}
+  </div>
+  <div class="konsole {konsole.type} " class:flash={konsole.flash}>[{konsole.time}] {konsole.message}</div>
+</header>
+<div class="code-wrapper">
+  <CodeEditor code={code} loc={true} autofocus={false} tab="\t" lang="javascript" on:change={evaluate} />
+</div>
+
+<style lang="sass" global>
+  .p5Canvas
+    display: none
+
+  $header: 80px
+  .hydritsi
+    flex-direction: column
+    color: white
+    .konsole
+      transition: 0.4s ease color
+      color: #666
+      &.error
+        color: red
+      &.success
+        color: green
+      &.flash
+        transition-duration: 0s 
+        color: white
+    *
+      box-sizing: border-box
+    .header
+      display: flex
+      flex-direction: column
+      flex-basis: $header
+      flex-shrink: 0
+      min-height: $header
+      padding: 10px
+      .actions, .konsole
+        flex-basis: 0
+        flex-grow: 1
+        display: flex
+        align-items: center
+      .actions
+          display: flex
+          flex-direction: row
+          button
+            background: transparent
+            border: 1px solid white
+            margin: 0
+            padding: 0 10px
+            color: white
+            font-weight: bold
+            font-family: Courier, serif
+    .code-wrapper
+      flex-grow: 0
+      flex-shrink: 0
+      flex-basis: calc( 100vh - #{$header})
+      max-height: calc( 100vh - #{$header})
+      overflow: auto
+      .codejar-wrap
+        margin-bottom: 120px
+        .codejar-linenumbers
+          background: none!important
+        :not(pre) > code[class*="language-"], pre[class*="language-"]
+          background: transparent
+</style>
