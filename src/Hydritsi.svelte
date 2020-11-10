@@ -10,7 +10,7 @@ import { onMount } from 'svelte';
 import p5Engine from 'p5';
 import CodeEditor from 'svelte-code-editor';
 import Prism from 'prismjs';
-import Example from './examples/Faces.js';
+import Example from './examples/Emotion.js';
 
 let capabilities = [
   {
@@ -60,15 +60,47 @@ let inputVideo,
 let blazeFace = null;
 let isSetup = false;
 
+let clmEmotionClassifier = null;
+let clmTracker = null;
+
+
 let helper = {
   getFastFace: async ( video ) => {
     if ( !blazeFace ) {
-      console.log("[Hydritsi 🐙] 🤦‍♀️ loading blaze face...");
+      console.log("[Hydritsi 🐙] 🤦‍♀️  loading blaze face...");
       setKonsole('info', 'loading face model');
       blazeFace = await blazeFaceEngine.load();
       setKonsole('success', 'face model loaded');
     }
     return await blazeFace.estimateFaces( video, false);
+  },
+  getEmotions: async( video ) => {
+
+    if (!clmEmotionClassifier && !clmTracker) {
+
+      console.log("[Hydritsi 🐙] 🤩  loading clmtracker emotions...");
+
+      // set eigenvector 9 and 11 to not be regularized. This is to better detect motion of the eyebrows
+
+      pModel.shapeModel.nonRegularizedVectors.push(9);
+      pModel.shapeModel.nonRegularizedVectors.push(11);
+
+      clmEmotionClassifier = new emotionClassifier();
+      clmEmotionClassifier.init(emotionModel);
+
+      clmTracker = new clm.tracker({useWebGL : true});
+      const didInit = clmTracker.init( pModel );
+      const didStart = clmTracker.start( video );
+
+      console.log(didInit, didStart, clmTracker, clmEmotionClassifier)
+
+    }
+
+    const found = clmTracker.getCurrentPosition()
+    const params = clmTracker.getCurrentParameters();
+    const predict = clmEmotionClassifier.meanPredict(params);
+    return predict;
+
   }
 }
 
@@ -369,7 +401,7 @@ function setupP5( p ) {
   <div class="konsole {konsole.type} " class:flash={konsole.flash}>[{konsole.time}] {konsole.message}</div>
 </header>
 <div class="code-wrapper">
-  <CodeEditor code={code} loc={true} autofocus={false} tab="\t" lang="javascript" on:change={evaluate} />
+  <CodeEditor code={code} loc={true} autofocus={false} lang="javascript" on:change={evaluate} />
 </div>
 
 <style lang="sass" global>

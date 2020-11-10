@@ -9,7 +9,7 @@ outputCanvas    the outgoing <canvas> element
 synth           HydraSynth engine
 p5              P5 engine
 streams         array of incoming streams
-messages        array of messages
+messages        array of incoming messages
 store          	blank object for storing vars
 helper          object of helper functions
 sketch					the object below (ie. this)
@@ -36,6 +36,17 @@ setup: () => {
   store.myFace = [];
 
 },
+update: async () => {
+
+  // M A C H I N E L E A R N I N G
+
+  // do data tasks here...
+
+  store.myFace = await helper.getFastFace( inputVideo );
+
+  // helpers are asyncronous functions - ie. wait for some data
+
+},
 draw: () => {
 
   // P 5
@@ -48,13 +59,6 @@ draw: () => {
   		p5.circle( point[0], point[1], 10 );
   	})
   })
-
-},
-update: async () => {
-
-  // M A C H I N E L E A R N I N G
-
-  store.myFace = await helper.getFastFace( inputVideo );
 
 }
 `
