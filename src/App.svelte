@@ -9,7 +9,6 @@ import { onMount } from 'svelte';
 import p5Engine from 'p5';
 import CodeEditor from 'svelte-code-editor';
 import Prism from 'prismjs';
-import Example from './examples/Basic.js';
 import Debug from './Debug.svelte';
 import Hydritsi from './Hydritsi.svelte';
 
@@ -44,9 +43,17 @@ function onWindowError( error ) {
 </main>
 
 <style lang="sass" global>
+  
+  // hide jitsi extras....
+
+  .watermark.leftwatermark, .invite-more-container
+    display: none!important
+
+  // app-specific styles...
+
   .hydritsi
     $bg: rgba(0,0,0,0.95)
-    background: linear-gradient(to right, $bg , rgba(0,0,0,0) )
+    background: linear-gradient(to right, $bg , rgba(0,0,0,0) )!important
     position: fixed
     top: 0
     left: 0
@@ -54,6 +61,9 @@ function onWindowError( error ) {
     height: 100vh
     z-index: 2
     box-sizing: border-box
+  .hydritsi-blur-button
+    position: absolute
+    left: -9999px
   body, html
     padding: 0
     margin: 0

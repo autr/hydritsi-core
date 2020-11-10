@@ -170,39 +170,36 @@ let helper = {
   }
 }
 
-let config = {
-    autoScale: true
-}
 
 let lastX, lastY, timestamp, dt = 0;
 
 onMount(async () => {
 
-  console.log('[Hydritsi 🐙] mounted!');
+    console.log('[Hydritsi 🐙] mounted!');
 
-  window.limpit = limpit;
-  window.config = config;
+    window.limpit = limpit;
 
-  window.inputVideo = inputVideo = null;
-  window.outputCanvas = outputCanvas = null;
-  window.hydra = hydra = null;
-  window.synth = synth = null;
-  window.faceapi = faceapi = faceapi;
-  window.streams = streams = [];
-  window.messages = messages = [];
-  window.store = store = {};
+    window.inputVideo = inputVideo = null;
+    window.outputCanvas = outputCanvas = null;
+    window.hydra = hydra = null;
+    window.synth = synth = null;
+    window.faceapi = faceapi = faceapi;
+    window.streams = streams = [];
+    window.messages = messages = [];
+    window.store = store = {};
 
-  console.log('[Hydritsi 🐙] reloading sketches...', system);
+    console.log('[Hydritsi 🐙] reloading sketches...', system);
 
-  system.loadLocalStorage()
+    system.loadLocalStorage()
 
-  setKonsole('success', 'hydritsi mounted' )
+    setKonsole('success', 'hydritsi mounted' )
 
 
-  console.log('[Hydritsi 🐙] creating p5...');
-  window.p5 = p5 = new p5Engine( setupP5 )
+    console.log('[Hydritsi 🐙] creating p5...');
+    window.p5 = p5 = new p5Engine( setupP5 )
 
-  system.loadSketch( 0 )
+    system.loadSketch( 0 )
+
 }); 
 
 
@@ -270,19 +267,24 @@ const limpit  = {
   enable: function( e ) {
 
 
-      console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', e);
 
-      window.inputVideo = inputVideo = e.inputVideo;
-      window.outputCanvas = outputCanvas = e.outputCanvas;
+    console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', e);
 
-      if (!hydra) {
-          window.hydra = hydra = new Hydra({ canvas: e.outputCanvas, autoLoop: false });
-          window.hydra.setResolution(outputCanvas.width, outputCanvas.height)
-          window.synth = synth = hydra.synth;
-          setTimeout( evaluate, 10);
-      }
+    window.inputVideo = inputVideo = e.inputVideo;
+    window.outputCanvas = outputCanvas = e.outputCanvas;
 
-      setKonsole('success', 'enabled hydritsi...');
+    if (!hydra) {
+
+        const w = e.outputCanvas.width;
+        const h = e.outputCanvas.height;
+        console.log('[Hydritsi 🐙] 👽 📐  setting hydra synth to...', w, h);
+        window.hydra = hydra = new Hydra({ canvas: e.outputCanvas, autoLoop: false });
+        window.hydra.setResolution(w, h)
+        window.synth = synth = hydra.synth;
+        setTimeout( evaluate, 10);
+    } 
+
+    setKonsole('success', 'enabled hydritsi...');
 
   },
   attach: function(e) {
@@ -324,6 +326,15 @@ const limpit  = {
 
 
 function evaluate( e ) {
+
+  // remove unneccesary massive rendering canvas 
+
+  // const bg = document.getElementById( 'largeVideoBackground' )
+  // if (bg) {
+  //   console.log('[Hydritsi 🐙] ✨  removed blur bg canvas...');
+  //   bg.remove();
+  // }
+
   if (e) code = e.detail
   clearTimeout( debounce );
   debounce = setTimeout( () => { 
@@ -337,7 +348,7 @@ function evaluate( e ) {
           eval( c);
           success = true;
           errorMessage = false;
-          setKonsole('success', 'sketch successfully reloaded');
+          setKonsole('success', 'sketch successfully evaluated');
           console.log('[Hydritsi 🐙] 🔧 👶 ✅  successfully updated sketch code...');
 
       } catch( err) {
@@ -412,16 +423,13 @@ function setupP5( p ) {
               // scale everything to outputCanvas:
               // makes things simpler when drawing video tracks, or CV outputs...
 
-              if (config.autoScale) {
-                  let x, y;
-                  x = p5.width / outputCanvas.width;
-                  y = p5.height / outputCanvas.height;
-                  if ( x != lastX || y != lastY ) {
-                      console.log("[Hydritsi 🐙] 🚨  p5 autoscaling to:", x, y);
-                      p5.scale( x, y );
-                      lastX = x;
-                      lastY = y;
-                  }
+
+              const w = outputCanvas.width;
+              const h = outputCanvas.height;
+
+              if (p5.width != w || p5.height != h) {
+                console.log("[Hydritsi 🐙] 🚨  p5 autoscaling to:", w, h);
+                p5.resizeCanvas( w, h )
               }
 
               // EZ-access draw...
@@ -462,19 +470,30 @@ function onKonsole(e) {
   setKonsole( e.detail.type, e.detail.message );
 }
 
+function onFindEnable() {
+  document.querySelector('.hydritsi-blur-button .toolbox-button').click();
+}
+
 
 </script>
-<header class="header">
-  <div class="actions">
-    <System bind:this={system} bind:temp={temp} bind:code={code} on:konsole={onKonsole}  />
-    <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">about</a>
-    <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">learn</a>
+
+<div class:none={!p5 || !hydra}>
+
+  <header class="header">
+    <div class="actions">
+      <System bind:this={system} bind:temp={temp} bind:code={code} on:konsole={onKonsole} on:change={evaluate}  />
+      <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">about</a>
+      <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">learn</a>
+    </div>
+    <div class="konsole {konsole.type} " class:bright={konsole.bright}>[{konsole.time}] {konsole.message}</div>
+  </header>
+  <div class="code-wrapper">
+    <CodeEditor code={code} loc={true} autofocus={false} lang="javascript" on:change={evaluate} />
   </div>
-  <div class="konsole {konsole.type} " class:bright={konsole.bright}>[{konsole.time}] {konsole.message}</div>
-</header>
-<div class="code-wrapper">
-  <CodeEditor code={code} loc={true} autofocus={false} lang="javascript" on:change={evaluate} />
+
 </div>
+
+<button class:none={p5 && hydra} class="m1" on:click={onFindEnable}>enable hydritsi</button>
 
 <style lang="sass" global>
 

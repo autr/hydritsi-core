@@ -1,11 +1,10 @@
 
 export default (doc) => `${doc.intro}
 
+// TODO: jazz it up....
+
 {
 	name: 'Face Example',
-	config: {
-		autoScale: true
-	},
 	setup: () => {
 
 		// H Y D R A
@@ -37,12 +36,17 @@ export default (doc) => `${doc.intro}
 
 		// P 5
 
-
 		p5.fill(255);
 
 		store.myFace.forEach( face => {
 			face.landmarks.forEach( point => {
-				p5.circle( point[0], point[1], 10 );
+
+				// inputVideo is different size to outputCanvas, so scale...
+
+				const scaleX = outputCanvas.width / inputVideo.videoWidth;
+				const scaleY = outputCanvas.height / inputVideo.videoHeight;
+
+				p5.circle( point[0] * scaleX, point[1] * scaleY, 10 );
 			})
 		})
 

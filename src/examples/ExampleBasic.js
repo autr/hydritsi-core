@@ -3,9 +3,6 @@ export default (doc) => `${doc.intro}
 
 {
 	name: 'Basic Example',
-	config: {
-		autoScale: true
-	},
 	setup: () => {
 
 		// H Y D R A
@@ -34,8 +31,8 @@ export default (doc) => `${doc.intro}
 
 		// P 5
 
-		const w = p5.canvas.width
-		const h = p5.canvas.height
+		const w = outputCanvas.width
+		const h = outputCanvas.height
 
 		p5.fill( 255 )
 		p5.rect( 40, 40, w - 80, h - 80)
