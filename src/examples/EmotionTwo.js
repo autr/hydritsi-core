@@ -27,6 +27,10 @@ setup: () => {
   synth.s0.init({src: p5.canvas })    // create p5 source at "s0"
   synth.s1.init({src: inputVideo })   // create webcam source at "s1"
 
+  store.emotions = []
+  store.emojis = []
+  store.fps = 0
+
 },
 update: async () => {
 
@@ -35,6 +39,34 @@ update: async () => {
   // do data tasks here...
 
   store.emotions = await helper.getEmotions( inputVideo )
+
+  store.fps += 1
+
+  if (store.fps % 30 != 0) return
+
+  store.emotions.forEach( emote => {
+
+    let face;
+    if (emote.emotion == 'angry') face = '😡'
+    if (emote.emotion == 'disgusted') face = '🤢'
+    if (emote.emotion == 'fear') face = '😨'
+    if (emote.emotion == 'sad') face = '☹️'
+    if (emote.emotion == 'surprised') face = '😮'
+    if (emote.emotion == 'happy') face = '😁'
+
+    let size = emote.value * 5;
+    if (emote.emotion == 'happy') size /= 5
+
+
+    let x = p5.map( Math.random(), -1, 1, 0, p5.canvas.width )
+    let y = -20
+
+    let speed = ( Math.random() + 1 ) / 2
+
+    if (size > 0.6) store.emojis.push( { face, size, x, y, speed } )
+
+  })
+
 
   // helpers are asyncronous functions - ie. wait for some data
 
@@ -45,6 +77,16 @@ draw: () => {
 
   p5.fill(255)
 
+  for (let i = 0; i < store.emojis.length; i++ ) {
+    const emoji = store.emojis[i];
+
+    p5.textSize( emoji.size * 128 )
+    // p5.textAlign( p5.CENTER )
+    p5.text( emoji.face, emoji.x, emoji.y )
+
+    emoji.y += emoji.speed * 2
+    if ( emoji.y > p5.canvas.height ) store.emojis.splice( i, 1 )
+  }
 
   // H Y D R A
   
@@ -53,29 +95,6 @@ draw: () => {
     .diff( synth.src( synth.s1 ) )    // blend with webcam
     .diff( synth.src( synth.s0 ) )    // blend with p5
     .out(  )   
-
-  if ( !store.emotions ) return
-
-  store.emotions.forEach( (emote, i) => {
-
-    let face;
-    if (emote.emotion == 'angry') face = '😡'
-    if (emote.emotion == 'disgusted') face = '🤢'
-    if (emote.emotion == 'fear') face = '😨'
-    if (emote.emotion == 'sad') face = '☹️'
-    if (emote.emotion == 'surprised') face = '😮'
-    if (emote.emotion == 'happy') face = '😁'
-
-    let x = ( p5.canvas.width / 6 ) * i
-    let y = p5.canvas.height / 2
-
-
-    p5.textSize( emote.value * 800 )
-    p5.textAlign( p5.CENTER )
-    p5.text( face, x, y )
-
-  })
-
 
 }
 `

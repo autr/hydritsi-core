@@ -80,20 +80,23 @@ let helper = {
 
       console.log("[Hydritsi 🐙] 🤩  loading clmtracker emotions...");
 
+      clmTracker = new clm.tracker({useWebGL : true});
+      clmTracker.init( pModel );
+
       // set eigenvector 9 and 11 to not be regularized. This is to better detect motion of the eyebrows
 
       pModel.shapeModel.nonRegularizedVectors.push(9);
       pModel.shapeModel.nonRegularizedVectors.push(11);
 
+      delete emotionModel['angry'];
+      delete emotionModel['disgusted'];
+      delete emotionModel['fear'];
+      delete emotionModel['surprised'];
+
       clmEmotionClassifier = new emotionClassifier();
       clmEmotionClassifier.init(emotionModel);
 
-      clmTracker = new clm.tracker({useWebGL : true});
-      const didInit = clmTracker.init( pModel );
-      const didStart = clmTracker.start( video );
-
-      console.log(didInit, didStart, clmTracker, clmEmotionClassifier)
-
+      clmTracker.start( video );
     }
 
     const found = clmTracker.getCurrentPosition()
