@@ -1,81 +1,67 @@
 
-export default `
-// I N T R O D U C T I O N
+export default (doc) => `${doc.intro}
 
-/*
----------------------------------------------
-inputVideo      the incoming <video> element
-outputCanvas    the outgoing <canvas> element
-synth           HydraSynth engine
-p5              P5 engine
-streams         array of incoming streams
-messages        array of incoming messages
-store           blank object for storing vars
-helper          object of helper functions
-sketch          the object below (ie. this)
----------------------------------------------
-*/
+{
+	name: 'Emotion Example',
+	config: {
+		autoScale: true
+	},
+	setup: () => {
 
-name: 'Basic Example',
-config: {
-  autoScale: true
-},
-setup: () => {
+		// H Y D R A
 
-  // H Y D R A
+		synth.s0.init({src: p5.canvas })    // create p5 source at "s0"
+		synth.s1.init({src: inputVideo })   // create webcam source at "s1"
 
-  synth.s0.init({src: p5.canvas })    // create p5 source at "s0"
-  synth.s1.init({src: inputVideo })   // create webcam source at "s1"
+	},
+	update: async () => {
 
-},
-update: async () => {
+		// M A C H I N E L E A R N I N G
 
-  // M A C H I N E L E A R N I N G
+		// do data tasks here...
 
-  // do data tasks here...
+		store.emotions = await helper.getEmotions( inputVideo )
 
-  store.emotions = await helper.getEmotions( inputVideo )
+		// helpers are asyncronous functions - ie. wait for some data
 
-  // helpers are asyncronous functions - ie. wait for some data
+	},
+	draw: () => {
 
-},
-draw: () => {
+		// P 5
 
-  // P 5
-
-  p5.fill(255)
+		p5.fill(255)
 
 
-  // H Y D R A
-  
-  synth
-    .osc( Math.sin(new Date() * 0.001) * 40 , 0.1, 0.8)                // create video synth
-    .diff( synth.src( synth.s1 ) )    // blend with webcam
-    .diff( synth.src( synth.s0 ) )    // blend with p5
-    .out(  )   
+		// H Y D R A
+		
+		synth
+			.osc( Math.sin(new Date() * 0.001) * 40 , 0.1, 0.8)                // create video synth
+			.diff( synth.src( synth.s1 ) )    // blend with webcam
+			.diff( synth.src( synth.s0 ) )    // blend with p5
+			.out(  )   
 
-  if ( !store.emotions ) return
+		if ( !store.emotions ) return
 
-  store.emotions.forEach( (emote, i) => {
+		store.emotions.forEach( (emote, i) => {
 
-    let face;
-    if (emote.emotion == 'angry') face = '😡'
-    if (emote.emotion == 'disgusted') face = '🤢'
-    if (emote.emotion == 'fear') face = '😨'
-    if (emote.emotion == 'sad') face = '☹️'
-    if (emote.emotion == 'surprised') face = '😮'
-    if (emote.emotion == 'happy') face = '😁'
+			let face;
+			if (emote.emotion == 'angry') face = '😡'
+			if (emote.emotion == 'disgusted') face = '🤢'
+			if (emote.emotion == 'fear') face = '😨'
+			if (emote.emotion == 'sad') face = '☹️'
+			if (emote.emotion == 'surprised') face = '😮'
+			if (emote.emotion == 'happy') face = '😁'
 
-    let x = ( p5.canvas.width / 6 ) * i
-    let y = p5.canvas.height / 2
-
-
-    p5.textSize( emote.value * 800 )
-    p5.textAlign( p5.CENTER )
-    p5.text( face, x, y )
-
-  })
+			let x = ( p5.canvas.width / 6 ) * i
+			let y = p5.canvas.height / 2
 
 
-}
+			p5.textSize( emote.value * 800 )
+			p5.textAlign( p5.CENTER )
+			p5.text( face, x, y )
+
+		})
+
+
+	}}
 `

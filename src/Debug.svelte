@@ -57,32 +57,42 @@
 </script>
 
 <style lang="sass">
-.inputVideo, .outputCanvas
-  position: fixed
-  overflow: hidden
-  width: 320px
-  z-index: 9
-  height: 240px
-.outputCanvas
-  top: 0px
-  right: 320px
-.inputVideo
-  top: 0px
-  right: 0px
-  video
-    object-fit: contain
-    height: 100%
+
+@import '../sassis/sassis.sass' 
+.hydritsi-debugger
+  +terminal-theme
+  .inputVideo, .outputCanvas, .debugger
+    position: fixed
+    overflow: hidden
+    z-index: 9
+  .inputVideo, .outputCanvas
     width: 320px
     height: 240px
-  svg
-    position: absolute
-    top: 0
-    left: 0
-    width: 100%
-    height: 100%
+  .debugger
+    top: 10px
+    right: 10px
+  .outputCanvas
+    top: 300px
+    right: 10px
+  .inputVideo
+    top: 40px
+    right: 10px
+    video
+      object-fit: contain
+      height: 100%
+      width: 320px
+      height: 240px
+    svg
+      position: absolute
+      top: 0
+      left: 0
+      width: 100%
+      height: 100%
 </style>
-
-<div class="inputVideo" on:click style="{style}" >
-  <video bind:this={inputVideo}></video>
+<div class="hydritsi-debugger">
+  <div class="filled bright debugger">debugger</div>
+  <div class="inputVideo" on:click style="{style}" >
+    <video bind:this={inputVideo}></video>
+  </div>
+  <canvas class="outputCanvas" bind:this={outputCanvas} />
 </div>
-<canvas class="outputCanvas" bind:this={outputCanvas} />

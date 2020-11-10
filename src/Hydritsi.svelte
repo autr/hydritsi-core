@@ -1,50 +1,31 @@
 <script>
 
-// import * as bodyPix from '@tensorflow-models/body-pix';
-// import * as blazeFace from '@tensorflow-models/blazeface';
-// import * as faceapi from 'face-api.js';
-import * as blazeFaceEngine from '@tensorflow-models/blazeface';
-
-
 import { onMount } from 'svelte';
-import p5Engine from 'p5';
-import CodeEditor from 'svelte-code-editor';
-import Prism from 'prismjs';
-import Example from './examples/Emotion.js';
 
-let capabilities = [
-  {
-    name: '🐙  hydra-synth',
-    disabled: true,
-    value: true
-  },
-  {
-    name: '🔸  p5.js',
-    disabled: true,
-    value: true
-  },
-  {
-    name: '🗣  face-api',
-    disabled: false,
-    value: false
-  },
-  {
-    name: '🦾  tf-body',
-    disabled: false,
-    value: false
-  },
-  {
-    name: '🎶  tone.js',
-    disabled: false,
-    value: false
-  }
-]
+import * as tf from '@tensorflow/tfjs-core'
+import * as blazeFaceEngine from '@tensorflow-models/blazeface';
+import * as faceMeshEngine from '@tensorflow-models/face-landmarks-detection';
+import * as classifyEngine from '@tensorflow-models/mobilenet'
+import * as cocoSSDEngine from '@tensorflow-models/coco-ssd'
+import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm'
+import * as cpu from '@tensorflow/tfjs-backend-cpu'
+import * as webgl from '@tensorflow/tfjs-backend-webgl'
+
+
+tfjsWasm.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@latest/dist/tfjs-backend-wasm.wasm');
+
+
+import p5Engine from 'p5';
+
+import CodeEditor from 'svelte-code-editor';
+import System from './System.svelte'
 
 
 let debounce;
 let errorMessage = null;
-let temp, code = Example;
 
+
+let system; // ref
 let inputVideo, 
     outputCanvas, 
     hydra,
@@ -55,24 +36,106 @@ let inputVideo,
     p5,
     store;
 
-
-
 let blazeFace = null;
+let isLoadingBlazeFace = false;
 let isSetup = false;
 
 let clmEmotionClassifier = null;
 let clmTracker = null;
 
+let temp, code = ''
+
+let cocoSSD, isLoadingCocoSSD;
+let faceMesh, isLoadingFaceMesh
+let classify, isLoadingClassify;
 
 let helper = {
   getFastFace: async ( video ) => {
-    if ( !blazeFace ) {
-      console.log("[Hydritsi 🐙] 🤦‍♀️  loading blaze face...");
-      setKonsole('info', 'loading face model');
-      blazeFace = await blazeFaceEngine.load();
-      setKonsole('success', 'face model loaded');
-    }
-    return await blazeFace.estimateFaces( video, false);
+
+      if ( !blazeFace && !isLoadingBlazeFace ) {
+        isLoadingBlazeFace = true;
+        console.log("[Hydritsi 🐙] 🤦‍♀️  loading blaze face...");
+        setKonsole('info', 'loading face model');
+        await tf.setBackend('wasm')
+        blazeFace = await blazeFaceEngine.load()
+        setKonsole('success', 'face model loaded');
+        console.log("[Hydritsi 🐙] 🤦‍♀️ ✅  blaze face loaded...", blazeFace);
+      }
+      if (! blazeFace ) return [];
+
+
+      return await blazeFace.estimateFaces( video, false);
+  },
+  getClassifications: async( video ) => {
+
+      if ( !classify && !isLoadingClassify ) {
+        isLoadingClassify = true;
+        console.log("[Hydritsi 🐙] 🌐  loading classifier...");
+        setKonsole('info', 'loading classifier');
+        await tf.setBackend('wasm')
+
+        classify = await classifyEngine.load({
+          version: 1,
+          alpha: 0.25
+        });
+        setKonsole('success', 'classifier loaded');
+        console.log("[Hydritsi 🐙] 🌐 ✅  classifier loaded...", classify);
+      }
+      if (! classify ) return [];
+      const data = await classify.classify( video );
+      if (data.length > 0) console.log(data);
+      return data;
+  },
+  getFaceMesh: async ( video ) => {
+
+      if ( !faceMesh && !isLoadingFaceMesh ) {
+        isLoadingFaceMesh = true;
+        console.log("[Hydritsi 🐙] 🌐  loading face mesh...");
+        setKonsole('info', 'loading face mesh');
+        await tf.setBackend('wasm')
+
+        faceMesh = await faceMeshEngine.load(
+          faceMeshEngine.SupportedPackages.mediapipeFacemesh,
+            { maxFaces: 1 }
+        );
+
+        setKonsole('success', 'face mesh loaded');
+        console.log("[Hydritsi 🐙] 🌐 ✅  face mesh loaded...", faceMesh);
+      }
+      if (! faceMesh ) return [];
+
+
+      return await faceMesh.estimateFaces({
+        input: video,
+        returnTensors: false,
+        flipHorizontal: false,
+        predictIrises: true
+      });
+  },
+  getDetectedObjects: async ( video ) => {
+
+      if ( !cocoSSD && !isLoadingCocoSSD ) {
+        isLoadingCocoSSD = true;
+        console.log("[Hydritsi 🐙] 🎲  loading coco ssd...");
+        setKonsole('info', 'loading coco ssd');
+        await tf.setBackend('wasm')
+        cocoSSD = await cocoSSDEngine.load({
+          base: 'lite_mobilenet_v2'
+        })
+        setKonsole('success', 'coco ssd loaded');
+        console.log("[Hydritsi 🐙] 🎲 ✅  coco ssd loaded...", cocoSSD);
+      }
+      if (! cocoSSD ) return [];
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.clientWidth;
+      canvas.height = video.clientHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const image = new Image()
+      image.src = canvas.toDataURL();
+
+      return await cocoSSD.detect( image );
   },
   getEmotions: async( video ) => {
 
@@ -113,11 +176,9 @@ let config = {
 
 let lastX, lastY, timestamp, dt = 0;
 
-
-
 onMount(async () => {
 
-  console.log('[Hydritsi 🐙] App mounted!');
+  console.log('[Hydritsi 🐙] mounted!');
 
   window.limpit = limpit;
   window.config = config;
@@ -131,17 +192,21 @@ onMount(async () => {
   window.messages = messages = [];
   window.store = store = {};
 
-  window.p5 = p5 = new p5Engine( setupP5 );
+  console.log('[Hydritsi 🐙] reloading sketches...', system);
+
+  system.loadLocalStorage()
+
+  setKonsole('success', 'hydritsi mounted' )
 
 
+  console.log('[Hydritsi 🐙] creating p5...');
+  window.p5 = p5 = new p5Engine( setupP5 )
+
+  system.loadSketch( 0 )
 }); 
 
-let konsole = {
-  type: 'info',
-  message: 'loading',
-  time: 'n/a',
-  flash: false
-};
+
+let konsole = {};
 
 function setKonsole( type, message ) {
   const d = new Date();
@@ -150,11 +215,11 @@ function setKonsole( type, message ) {
     type,
     message,
     time: `${zero(d.getHours())}:${zero(d.getMinutes())}:${zero(d.getSeconds())}`,
-    flash: true
+    bright: true
   }
 
   setTimeout( () => {
-    konsole.flash = false
+    konsole.bright = false
   }, 10)
 }
 
@@ -204,6 +269,7 @@ const limpit  = {
   },
   enable: function( e ) {
 
+
       console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', e);
 
       window.inputVideo = inputVideo = e.inputVideo;
@@ -217,6 +283,7 @@ const limpit  = {
       }
 
       setKonsole('success', 'enabled hydritsi...');
+
   },
   attach: function(e) {
       console.log('[Hydritsi 🐙] 🎬  attaching video...', e);
@@ -265,7 +332,7 @@ function evaluate( e ) {
       let success = false;
       try {
 
-          const c = `window.sketch = { ${temp} };`;
+          const c = `window.sketch = ${temp};`;
           console.log('[Hydritsi 🐙] 🔧 👶  evaluating new sketch code...');
           eval( c);
           success = true;
@@ -279,7 +346,7 @@ function evaluate( e ) {
           console.log('.........', err, err.stack)
           console.log("[Hydritsi 🐙] 🔧 👶 ❌  couldn't eval new sketch code...", err.message, '\n', err.stack);
           try {
-              const c = `window.sketch = { ${code} };`;
+              const c = `window.sketch = ${code};`;
               console.log('[Hydritsi 🐙] 🔧 👵  evaluating old sketch code...');
 
               eval( c );
@@ -350,7 +417,7 @@ function setupP5( p ) {
                   x = p5.width / outputCanvas.width;
                   y = p5.height / outputCanvas.height;
                   if ( x != lastX || y != lastY ) {
-                      console.log("[Hydritsi 🐙] 🚨  autoscaling to:", x, y);
+                      console.log("[Hydritsi 🐙] 🚨  p5 autoscaling to:", x, y);
                       p5.scale( x, y );
                       lastX = x;
                       lastY = y;
@@ -391,40 +458,41 @@ function setupP5( p ) {
       }
 }
 
+function onKonsole(e) {
+  setKonsole( e.detail.type, e.detail.message );
+}
+
 
 </script>
 <header class="header">
   <div class="actions">
-    {#each capabilities as opt}
-      <!-- <button class:active={opt.value} disabled={opt.disabled} on:click={ e => opt.value = !opt.value}>
-        {opt.name}
-      </button> -->
-    {/each}
+    <System bind:this={system} bind:temp={temp} bind:code={code} on:konsole={onKonsole}  />
+    <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">about</a>
+    <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">learn</a>
   </div>
-  <div class="konsole {konsole.type} " class:flash={konsole.flash}>[{konsole.time}] {konsole.message}</div>
+  <div class="konsole {konsole.type} " class:bright={konsole.bright}>[{konsole.time}] {konsole.message}</div>
 </header>
 <div class="code-wrapper">
   <CodeEditor code={code} loc={true} autofocus={false} lang="javascript" on:change={evaluate} />
 </div>
 
 <style lang="sass" global>
+
+@import '../sassis/sassis.sass' 
+
+$header: 80px
+html
   .p5Canvas
     display: none
-
-  $header: 80px
   .hydritsi
+    +terminal-theme()
+
     flex-direction: column
     color: white
     .konsole
       transition: 0.4s ease color
-      color: #666
-      &.error
-        color: red
-      &.success
-        color: green
-      &.flash
+      &.bright
         transition-duration: 0s 
-        color: white
     *
       box-sizing: border-box
     .header
@@ -442,14 +510,6 @@ function setupP5( p ) {
       .actions
           display: flex
           flex-direction: row
-          button
-            background: transparent
-            border: 1px solid white
-            margin: 0
-            padding: 0 10px
-            color: white
-            font-weight: bold
-            font-family: Courier, serif
     .code-wrapper
       flex-grow: 0
       flex-shrink: 0
@@ -460,6 +520,6 @@ function setupP5( p ) {
         margin-bottom: 120px
         .codejar-linenumbers
           background: none!important
-        :not(pre) > code[class*="language-"], pre[class*="language-"]
+        code[class*="language-"], pre[class*="language-"]
           background: transparent
 </style>

@@ -1,0 +1,3 @@
+[submodule "sassis"]
+	path = sassis
+	url = https://github.com/autr/sassis
