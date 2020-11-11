@@ -83,7 +83,6 @@ let helper = {
       }
       if (! classify ) return [];
       const data = await classify.classify( video );
-      if (data.length > 0) console.log(data);
       return data;
   },
   getFaceMesh: async ( video ) => {

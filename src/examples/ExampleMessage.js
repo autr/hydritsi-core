@@ -30,7 +30,7 @@ export default (doc) => `${doc.intro}
 
 		p5.textSize(64)
 		p5.fill( 255 )
-
+		
 		if (messages.length <= 0) {
 			p5.text( 'send a chat message', outputCanvas.width/2, outputCanvas.height/2 );
 		}
