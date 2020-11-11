@@ -2,8 +2,6 @@
 
 A live-coding video chat platform built with Jitsi Meet + Hydra Synth + P5.js + TensorFlow 
 
-### Learn
-
 **Hydra Synth**
 
 * [Documentation](https://github.com/ojack/hydra/blob/master/docs/funcs.md)
