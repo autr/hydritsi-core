@@ -13,12 +13,12 @@ import Debug from './Debug.svelte';
 import Hydritsi from './Hydritsi.svelte';
 
 let debug;
-let room;
+let active;
 
 
 onMount(async () => {
-   debug = (window.location.hash.length > 2);
-   if (window.location.pathname.length > 2 || debug) room = true;
+   debug = (window.location.search == '?debug=1');
+   if (window.location.pathname.length > 1 || debug) active = true;
 
    if (debug) console.log('[Hydritsi 🤖] 👋  using debug...');
    if (!debug) console.log('[Hydritsi 🤖] 👋  not using debug (add #debug to url to test)...');
@@ -35,7 +35,7 @@ function onWindowError( error ) {
 <!-- <svelte:window on:keydown={onWindowError} /> -->
 <main>
   {#if debug}<Debug />{/if}
-  {#if room}
+  {#if active}
     <div class="hydritsi">
       <Hydritsi />
     </div>
@@ -46,8 +46,14 @@ function onWindowError( error ) {
   
   // hide jitsi extras....
 
-  .watermark.leftwatermark, .invite-more-container
+  .watermark.leftwatermark, .invite-more-container, .welcome-footer, .welcome-cards-container
     display: none!important
+  .welcome .header
+    height: 100vh!important
+    .header-text-subtitle
+      width: 340px!important
+      margin: 32px auto!important
+    .header-container
 
   // app-specific styles...
 
@@ -79,7 +85,7 @@ function onWindowError( error ) {
         margin-top: 20px
         width: 240px
         height: 40px
-        background: url('/hydritsi-core/public/vidicon.png')
+        background: url('/static/hydritsi-core/public/vidicon.png')
         background-size: 240px
         mix-blend-mode: lighten
 </style>

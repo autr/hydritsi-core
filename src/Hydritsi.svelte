@@ -186,6 +186,7 @@ onMount(async () => {
     window.streams = streams = [];
     window.messages = messages = [];
     window.store = store = {};
+    window.helper = helper;
 
     console.log('[Hydritsi 🐙] reloading sketches...');
 
@@ -377,7 +378,7 @@ function evaluate( e ) {
       lastP5HydraError = false;
       lastUpdateError = false;
 
-      try {
+      try { 
         console.log('[Hydritsi 🐙] 🔧  running sketch setup...');
         window.sketch.setup();
         isSetup = true;
@@ -435,8 +436,13 @@ function setupP5( p ) {
               // EZ-access draw...
               if (isSetup) {
                 try {
-                    window.sketch.draw( )
+
+                    p5.translate( p5.canvas.width/2, 0 );
+                    p5.scale( -1, 1 )
+                    p5.push();
+                    window.sketch.draw()
                     lastP5DrawError = false;
+                    p5.pop();
                 } catch( err ) {
                   if (!lastP5DrawError) {
                     console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch draw function...", err.message, window.sketch);

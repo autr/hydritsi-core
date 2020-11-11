@@ -89,6 +89,7 @@
       width: 100%
       height: 100%
 </style>
+
 <div class="hydritsi-debugger">
   <div class="filled bright debugger">debugger</div>
   <div class="inputVideo" on:click style="{style}" >
