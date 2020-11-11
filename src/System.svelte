@@ -41,15 +41,34 @@ $: changesMade = (currentSketch) ? currentSketch.code != code : false
 
 
 onMount(async () => {
-  console.log('[Hydritsi 💿] mounted...');
+  console.log('[Hydritsi 💿] ✅  mounted System...');
 })
 
+export function initLoadSketch() {
 
+  console.log("[Hydritsi 💿] #️⃣  loading sketch from hash...");
+  try {
+    const n = decodeURI(window.location.hash).substring(1)
+    const found = sketches.filter( s => s.name == n )[0]
+    const idx = sketches.indexOf(found)
+    if (found) {
+      console.log("[Hydritsi 💿] #️⃣ ✅  loading hash sketch...", n);
+      loadSketch( idx )
+    } else {
+      console.log("[Hydritsi 💿] #️⃣ ❌  not found, reverting to 0...", n, idx);
+      loadSketch(0);
+    }
+  } catch( err ) {
+    console.log("[Hydritsi 💿] #️⃣ ❌  error parsing hash...", err.message);
+    loadSketch(0);
+  }
+}
 
 export function loadSketch( i ) {
   console.log("[Hydritsi 💿]  loading sketch at index...", i);
   sketchIndex = i
   temp = code = sketches[sketchIndex].code
+  window.location.hash = sketches[sketchIndex].name
   try {
 	  console.log("[Hydritsi 💿] ✅  sketch loaded...");
 	  dispatch( 'konsole', { type: 'info', message: `${sketches[sketchIndex].name} loaded` })
@@ -84,7 +103,7 @@ export function loadLocalStorage() {
   a.forEach( (c, i) => {
 
     try {
-      const sketch = parseSketch( c, i )
+      const sketch = parseSketch( c )
       const name = sketch.name
 
       sketches.push( {
@@ -97,12 +116,13 @@ export function loadLocalStorage() {
     }
   })
 
-  console.log(`[Hydritsi 💿] 🗃 ✅  loaded ${ sketches.length } sketches, skipped ${skipped}...`, sketches);
+  console.log(`[Hydritsi 💿] 🗃 ✅  loaded ${ sketches.length } sketches, skipped ${skipped}...`);
+  console.log('[Hydritsi 💿] 🗃 ✅  sketches:', JSON.stringify( sketches.map( s => s.name ), null, 2));
 
 }
 
 function parseSketch( c, info ) {
-  console.log("[Hydritsi 💿] 📛  parsing sketch...", info);
+  console.log("[Hydritsi 💿] 📛  parsing sketch...", (info) ? info : '' );
   try {
     eval( `window.parsing = ${c}`)
     return window.parsing;

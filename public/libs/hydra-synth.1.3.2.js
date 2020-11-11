@@ -801,7 +801,6 @@ class HydraRenderer {
       source.resize(width, height)
     })
     this.regl._refresh()
-     console.log(this.canvas.width)
   }
 
   canvasToImage (callback) {

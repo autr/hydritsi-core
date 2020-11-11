@@ -175,7 +175,7 @@ let lastX, lastY, timestamp, dt = 0;
 
 onMount(async () => {
 
-    console.log('[Hydritsi 🐙] mounted!');
+    console.log('[Hydritsi 🐙] ✅  mounted Hydritsi...');
 
     window.limpit = limpit;
 
@@ -188,7 +188,7 @@ onMount(async () => {
     window.messages = messages = [];
     window.store = store = {};
 
-    console.log('[Hydritsi 🐙] reloading sketches...', system);
+    console.log('[Hydritsi 🐙] reloading sketches...');
 
     system.loadLocalStorage()
 
@@ -198,7 +198,8 @@ onMount(async () => {
     console.log('[Hydritsi 🐙] creating p5...');
     window.p5 = p5 = new p5Engine( setupP5 )
 
-    system.loadSketch( 0 )
+
+    system.initLoadSketch()
 
 }); 
 
@@ -268,7 +269,7 @@ const limpit  = {
 
 
 
-    console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', e);
+    console.log('[Hydritsi 🐙] 👽  enabling hydritsi...', JSON.stringify( Object.keys(e) ) );
 
     window.inputVideo = inputVideo = e.inputVideo;
     window.outputCanvas = outputCanvas = e.outputCanvas;
@@ -399,7 +400,7 @@ function setupP5( p ) {
 
       p.setup = () => { 
 
-          console.log('[Hydritsi 🐙] 🚨  setting up p5...', window.sketch);
+          console.log('[Hydritsi 🐙] 🚨  setting up p5...');
           p5.createCanvas(640, 360);
 
           // this.loadTensorFlow();

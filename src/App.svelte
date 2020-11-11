@@ -17,7 +17,7 @@ let room;
 
 
 onMount(async () => {
-   debug = (window.location.hash == '#debug');
+   debug = (window.location.hash.length > 2);
    if (window.location.pathname.length > 2 || debug) room = true;
 
    if (debug) console.log('[Hydritsi 🤖] 👋  using debug...');

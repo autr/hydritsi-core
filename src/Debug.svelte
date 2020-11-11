@@ -21,12 +21,12 @@
   }
 
   function attach( ){
-    console.log('[Hydritsi 🐞]  attaching to hydritsi...', limpit);
+    console.log('[Hydritsi 🐞] attaching debugger to hydritsi...' );
     limpit.enable( { inputVideo, outputCanvas });
   }
 
   onMount( async() => {
-    console.log('[Hydritsi 🐞]  mounting...')
+    console.log('[Hydritsi 🐞] ✅  mounted Debug...')
     outputCanvas.getContext('webgl', {preserveDrawingBuffer: true});
 
     if (navigator.mediaDevices) {
@@ -34,7 +34,7 @@
         navigator.mediaDevices.getUserMedia({ video: {width: 480, height: 320} })
           .then(function (stream) { 
             streamPtr = stream;
-            console.log('[Hydritsi 🐞] ✅  successfully opened', stream)
+            console.log('[Hydritsi 🐞] ✅  successfully opened...', stream.id)
             inputVideo.srcObject = stream;
             inputVideo.onloadedmetadata = function(e) {
               inputVideo.play();

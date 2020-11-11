@@ -5,14 +5,14 @@ export default (doc) => `${doc.intro}
 {
 	name: 'Classify Example',
 	setup: () => {
-
+		store.objects = [];
 	},
 	update: async () => {
 
-		// await helper.getClassifications( inputVideo )
+		store.objects = await helper.getClassifications( inputVideo )
 	},
 	draw: () => {
-
+		console.log(store.objects)
 	}
 }
 `
