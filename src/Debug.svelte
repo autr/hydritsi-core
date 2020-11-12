@@ -31,7 +31,7 @@
 
     if (navigator.mediaDevices) {
       if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: {width: 480, height: 320} })
+        navigator.mediaDevices.getUserMedia({ video: {width: 640, height: 360} })
           .then(function (stream) { 
             streamPtr = stream;
             console.log('[Hydritsi 🐞] ✅  successfully opened...', stream.id)
@@ -67,7 +67,7 @@
     z-index: 9
   .inputVideo, .outputCanvas
     width: 320px
-    height: 240px
+    height: 180px
   .debugger
     top: 10px
     right: 10px
@@ -81,7 +81,7 @@
       object-fit: contain
       height: 100%
       width: 320px
-      height: 240px
+      height: 180px
     svg
       position: absolute
       top: 0

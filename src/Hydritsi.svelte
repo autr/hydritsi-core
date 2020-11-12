@@ -220,21 +220,6 @@ const limpit  = {
 
   update: async function( inputVideo, outputCanvas  ) {
 
-      // if (!store.faceApiLoaded) {
-
-          // faceapi.nets.ssdMobilenetv1.isLoaded
-          // faceapi.nets.faceLandmark68Net.isLoaded
-          // faceapi.nets.faceExpressionNet.isLoaded
-
-          // await faceapi.nets.ssdMobilenetv1.load('/static/models/')
-          // await faceapi.loadFaceLandmarkModel('/static/models/')
-          // await faceapi.loadFaceExpressionModel('/static/models/')
-          // store.faceApiLoaded = true;
-
-          // console.log('[Hydritsi 🐙] face api loaded!');
-      // }
-
-    // update...
     if (!isSetup) return;
     try {
         await window.sketch.update();
@@ -446,8 +431,8 @@ function setupP5( p ) {
               if (isSetup) {
                 try {
 
-                    p.translate( p.canvas.width/2, 0 );
-                    p.scale( -1, 1 )
+                    // p.translate( p.canvas.width/2, 0 );
+                    // p.scale( -1, 1 )
                     p.push();
                     window.sketch.draw()
                     lastP5DrawError = false;
@@ -495,7 +480,7 @@ let zooms = {
   '1/4 resolution (fastest)': 0.25
 }
 
-let zoom = Object.keys(zooms)[1]
+let zoom = Object.keys(zooms)[0]
 
 </script>
 

@@ -27,13 +27,13 @@ let sketchIndex
 let examples = [
   Basic( Data ),
   Synth( Data ),
-  Multi( Data ),
+  // Multi( Data ),
   Face( Data ),
   Mesh( Data ),
   Message( Data ),
-  Emotion( Data ),
-  Classify( Data ),
-  Three( Data )
+  // Emotion( Data ),
+  Classify( Data )
+  // Three( Data )
 ]
 
 $: currentSketch = sketches[sketchIndex] || {}

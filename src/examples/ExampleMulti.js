@@ -12,6 +12,9 @@ export default (doc) => `${doc.intro}
 	},
 	draw: () => {
 
+	},
+	onAttach: () => {
+		
 	}
 }
 `

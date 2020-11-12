@@ -12,10 +12,11 @@ export default (doc) => `${doc.intro}
 		// H Y D R A
 
 		synth
-			.src( synth.s1 )    // blend with webcam
-			.modulateRotate(osc(0.2,0.1,0),200,200) // modulate
-			.diff( synth.src( synth.s0 ) )    // blend with p5
-			.out(  )    
+			.src( synth.s1 )    // webcam
+			.contrast( 2 )
+			.modulateRotate( osc( 0.2, 0.1, 0 ), 200, 200 ) 
+			.diff( synth.src( synth.s0 ) )    // p5
+			.out()    
 	},
 	update: async () => {
 		
@@ -25,8 +26,6 @@ export default (doc) => `${doc.intro}
 
 	},
 	draw: () => {
-                      // send to output
-
 
 		// P 5
 
@@ -34,8 +33,8 @@ export default (doc) => `${doc.intro}
 		const h = outputCanvas.height
 		
 		p5.colorMode(p5.HSB)
-		p5.fill( (new Date() * 0.02) % 100, 100, 100 )
-		p5.circle( w/2, h/2, h * Math.sin( new Date() * 0.001 ) )
+		p5.fill( 200, 100, 100 )
+		p5.circle( w/2, h/2, h * 0.8 )
 
 	}
 }

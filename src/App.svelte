@@ -46,6 +46,7 @@ function onWindowError( error ) {
   
   // hide jitsi extras....
   html, body
+    background: black
     *
       filter: none!important // goddamn css effects slowing tings down...
   .action-btn, .welcome .welcome-page-button

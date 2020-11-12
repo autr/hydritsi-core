@@ -8,6 +8,7 @@ export default (doc) => `${doc.intro}
 		synth.s1.init({src: inputVideo })   // create webcam source at "s1"
 
 		synth.src( synth.s1 )
+			.scale( 1, -1 )					// mirror
 			.add( 
 				osc(10,0,1)
 					.kaleid(50)
@@ -16,6 +17,7 @@ export default (doc) => `${doc.intro}
 					) 
 				)
 			.diff( synth.src( synth.s0 ) ) 
+			.scale( 1, -1 )					// mirror
 			.out(  )            
 
 		store.objects = [];

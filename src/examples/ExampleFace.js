@@ -13,10 +13,10 @@ export default (doc) => `${doc.intro}
 		synth.s1.init({src: inputVideo })   // create webcam source at "s1"
 
 		synth
-			.osc(20, 0.1, 0.8)                // create video synth
-			.diff( synth.src( synth.s1 ) )    // blend with webcam
-			.diff( synth.src( synth.s0 ) )    // blend with p5
-			.out(  )                          // send to output
+			.src( synth.s1 )					// webcam
+			.blend( osc( 1, 2, 3, 4 ) )			// synth
+			.diff( synth.src( synth.s0 ) )		// p5
+			.out(  )							// send to output
 
 		store.myFace = [];
 
@@ -36,17 +36,52 @@ export default (doc) => `${doc.intro}
 
 		// P 5
 
-		p5.fill(255);
+
+		const cw = outputCanvas.width
+		const ch = outputCanvas.height
+
+		const sw = outputCanvas.width / inputVideo.videoWidth
+		const sh = outputCanvas.height / inputVideo.videoHeight
+
+		// inputVideo is different size to outputCanvas, so scale (and flip)...
+
+		const scaleX = ( value ) => value * sw
+		const scaleY = ( value ) => value * sh
 
 		store.myFace.forEach( face => {
+
+			// draw rectangle...
+
+			let tlx = scaleX( face.topLeft[0] )
+			let tly = scaleY( face.topLeft[1] )
+			let brx = scaleX( face.bottomRight[0] )
+			let bry = scaleY( face.bottomRight[1] )
+
+			let w = brx - tlx
+			let h = bry - tly
+
+			p5.fill( 255, 0, 0 )
+			p5.rect( tlx, tly, w, h )
+
+			p5.stroke( 0, 255, 255 )
+			p5.strokeWeight( 4 )
+
+			p5.line( 0, 0, tlx, tly )
+			p5.line( cw, 0, brx, tly )
+			p5.line( cw, ch, brx, bry )
+			p5.line( 0, ch, tlx, bry )
+
+			p5.fill( 0, 0, 255 )
+			p5.strokeWeight( 0 )
+
 			face.landmarks.forEach( point => {
 
-				// inputVideo is different size to outputCanvas, so scale...
 
-				const scaleX = outputCanvas.width / inputVideo.videoWidth;
-				const scaleY = outputCanvas.height / inputVideo.videoHeight;
+				let x = scaleX( point[0] )
+				let y = scaleY( point[1] )
 
-				p5.circle( point[0] * scaleX, point[1] * scaleY, 10 );
+				p5.circle( x, y, ch * 0.1 )
+
 			})
 		})
 
