@@ -45,21 +45,55 @@ function onWindowError( error ) {
 <style lang="sass" global>
   
   // hide jitsi extras....
-
+  html, body
+    *
+      filter: none!important // goddamn css effects slowing tings down...
+  .action-btn, .welcome .welcome-page-button
+    background: #3600ff!important
+    border: 1px solid #00c1ff!important
+    font-weight: bold!important
+    font-family: monospace!important
+  .welcome
+    &:after
+      content: "created by Autr"
+      position: fixed
+      bottom: 10px
+      left: 0px
+      display: block
+      text-align: center
+      margin: 0 auto
+      width: 100%
+      font-size: 12px
+      font-weight: normal
+      font-family: monospace
   .watermark.leftwatermark, .invite-more-container, .welcome-footer, .welcome-cards-container
     display: none!important
   .welcome .header
     height: 100vh!important
     .header-text-subtitle
-      width: 340px!important
+      width: 360px!important
       margin: 32px auto!important
-    .header-container
+  h1, h2, h3, h4, h5, h6, .title, .header-text-title, .header-text-subtitle
+    font-weight: bold!important
+    text-shadow: 2px 2px #004bff
+  .header-text-title
+    text-shadow: 4px 4px #004bff
+  .header-text-subtitle
+    text-shadow: 2px 2px #ff00dc
+  #largeVideoBackgroundContainer
+    background: black!important
+    filter: none!important
+    *
+      display: none!important
+      filter: none!important
+  .filmstrip video, .display-name-on-black video
+    opacity: 1!important
 
   // app-specific styles...
 
   .hydritsi
     $bg: rgba(0,0,0,0.95)
-    background: linear-gradient(to right, $bg , rgba(0,0,0,0) )!important
+    background: linear-gradient(to right, $bg , rgba(0,0,0,0) 70% )!important
     position: fixed
     top: 0
     left: 0
@@ -67,6 +101,7 @@ function onWindowError( error ) {
     height: 100vh
     z-index: 2
     box-sizing: border-box
+    font-family: monospace, Courier!important
   .hydritsi-blur-button
     position: absolute
     left: -9999px

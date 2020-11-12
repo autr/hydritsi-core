@@ -195,11 +195,6 @@ onMount(async () => {
     setKonsole('success', 'hydritsi mounted' )
 
 
-    console.log('[Hydritsi 🐙] creating p5...');
-    window.p5 = p5 = new p5Engine( setupP5 )
-
-
-    system.initLoadSketch()
 
 }); 
 
@@ -274,16 +269,29 @@ const limpit  = {
     window.inputVideo = inputVideo = e.inputVideo;
     window.outputCanvas = outputCanvas = e.outputCanvas;
 
+    console.log('[Hydritsi 🐙] 🔎 📐  using zoom scale...', zoom, zooms[zoom] );
+
+    outputCanvas.width *= zooms[zoom];
+    outputCanvas.height *= zooms[zoom];
+
+    const w = e.outputCanvas.width;
+    const h = e.outputCanvas.height;
+
+    console.log('[Hydritsi 🐙] 🔵 📐  creating p5 to...', w, h);
+    window.p5 = p5 = new p5Engine( setupP5 )
+
+
+    system.initLoadSketch()
+
+
     if (!hydra) {
 
-        const w = e.outputCanvas.width;
-        const h = e.outputCanvas.height;
         console.log('[Hydritsi 🐙] 👽 📐  setting hydra synth to...', w, h);
-        window.hydra = hydra = new Hydra({ canvas: e.outputCanvas, autoLoop: false });
+        window.hydra = hydra = new Hydra({ canvas: e.outputCanvas, autoLoop: true });
         window.hydra.setResolution(w, h)
         window.synth = synth = hydra.synth;
         setTimeout( evaluate, 10);
-    } 
+    }
 
     setKonsole('success', 'enabled hydritsi...');
 
@@ -400,8 +408,10 @@ function setupP5( p ) {
 
       p.setup = () => { 
 
-          console.log('[Hydritsi 🐙] 🚨  setting up p5...');
-          p5.createCanvas(640, 360);
+          const w = window.outputCanvas.width;
+          const h = window.outputCanvas.height;
+          console.log('[Hydritsi 🐙] 🚨  setting up p5...', w, h);
+          p.createCanvas( w, h );
 
           // this.loadTensorFlow();
 
@@ -409,17 +419,16 @@ function setupP5( p ) {
       }
       p.draw = () => { 
 
-
-          const t = Date.now();
-          dt = t - timestamp;
+          // const t = Date.now();
+          // dt = t - timestamp;
 
           // only draw P5 if outputCanvas from JitsiBlurEffect.js has been inited...
 
 
           if (outputCanvas) {
 
-              p5.clear();
-              p5.background(0);
+              p.clear();
+              p.background(0);
 
               // scale everything to outputCanvas:
               // makes things simpler when drawing video tracks, or CV outputs...
@@ -428,21 +437,21 @@ function setupP5( p ) {
               const w = outputCanvas.width;
               const h = outputCanvas.height;
 
-              if (p5.width != w || p5.height != h) {
+              if (p.width != w || p.height != h) {
                 console.log("[Hydritsi 🐙] 🚨  p5 autoscaling to:", w, h);
-                p5.resizeCanvas( w, h )
+                p.resizeCanvas( w, h )
               }
 
               // EZ-access draw...
               if (isSetup) {
                 try {
 
-                    p5.translate( p5.canvas.width/2, 0 );
-                    p5.scale( -1, 1 )
-                    p5.push();
+                    p.translate( p.canvas.width/2, 0 );
+                    p.scale( -1, 1 )
+                    p.push();
                     window.sketch.draw()
                     lastP5DrawError = false;
-                    p5.pop();
+                    p.pop();
                 } catch( err ) {
                   if (!lastP5DrawError) {
                     console.log("[Hydritsi 🐙] 🔧 ❌  couldn't run sketch draw function...", err.message, window.sketch);
@@ -453,22 +462,22 @@ function setupP5( p ) {
 
               }
 
-              if (hydra) {
+              // if (hydra) {
 
-                  try {
-                      hydra.tick( dt  )
-                      lastP5HydraError = false;
-                  } catch( err ) {
-                    if (!lastP5HydraError) {
-                      console.log("[Hydritsi 🐙] 🚨 ❌  couldn't render hydra...", err.message);
-                      lastP5HydraError = true;
-                      setKonsole('error', err.message);
-                    }
-                  }
-              }
+              //     try {
+              //         hydra.tick( dt  )
+              //         lastP5HydraError = false;
+              //     } catch( err ) {
+              //       if (!lastP5HydraError) {
+              //         console.log("[Hydritsi 🐙] 🚨 ❌  couldn't render hydra...", err.message);
+              //         lastP5HydraError = true;
+              //         setKonsole('error', err.message);
+              //       }
+              //     }
+              // }
           }
 
-          timestamp = t;
+          // timestamp = t;
       }
 }
 
@@ -480,6 +489,13 @@ function onFindEnable() {
   document.querySelector('.hydritsi-blur-button .toolbox-button').click();
 }
 
+let zooms = {
+  'full resolution (slowest)': 1,
+  '1/2 resolution (faster)': 0.5,
+  '1/4 resolution (fastest)': 0.25
+}
+
+let zoom = Object.keys(zooms)[1]
 
 </script>
 
@@ -499,7 +515,21 @@ function onFindEnable() {
 
 </div>
 
-<button class:none={p5 && hydra} class="m1" on:click={onFindEnable}>enable hydritsi</button>
+<div class:none={p5 && hydra} >
+  <header class="header">
+    <div class="actions">
+      <button class="mr04 mb0 bright" on:click={onFindEnable}>enable hydritsi</button>
+      <div class="select">
+        <select bind:value={zoom} class="bright outline">
+          {#each Object.keys(zooms) as z }
+            <option name={z} value={z}>{z}</option>
+          {/each}
+        </select>
+      </div>
+    </div>
+    <div class="konsole" style="opacity:0">not yet enabled</div>
+  </header>
+</div>
 
 <style lang="sass" global>
 
@@ -511,7 +541,8 @@ html
     display: none
   .hydritsi
     +terminal-theme()
-
+    button, select
+      font-family: monospace!important
     flex-direction: column
     color: white
     .konsole
