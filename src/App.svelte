@@ -49,6 +49,16 @@ function onWindowError( error ) {
     background: black
     *
       filter: none!important // goddamn css effects slowing tings down...
+  #react
+    *
+      // background: none!important
+      animation: none!important
+      transition: none!important
+      // border-radius: 0!important
+      // font-family: monospace!important
+      // font-size: 12px!important
+    // .new-toolbox
+    //   bottom: 0!important
   .action-btn, .welcome .welcome-page-button
     background: #3600ff!important
     border: 1px solid #00c1ff!important
@@ -67,6 +77,9 @@ function onWindowError( error ) {
       font-size: 12px
       font-weight: normal
       font-family: monospace
+      color: white
+  .videocontainer
+    background: black!important
   .watermark.leftwatermark, .invite-more-container, .welcome-footer, .welcome-cards-container
     display: none!important
   .welcome .header
@@ -94,7 +107,7 @@ function onWindowError( error ) {
 
   .hydritsi
     $bg: rgba(0,0,0,0.95)
-    background: linear-gradient(to right, $bg , rgba(0,0,0,0) 70% )!important
+    background: none!important
     position: fixed
     top: 0
     left: 0
@@ -103,6 +116,8 @@ function onWindowError( error ) {
     z-index: 2
     box-sizing: border-box
     font-family: monospace, Courier!important
+    &.active
+      background: linear-gradient(to right, $bg , rgba(0,0,0,0) 70% )!important
   .hydritsi-blur-button
     position: absolute
     left: -9999px

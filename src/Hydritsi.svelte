@@ -486,7 +486,7 @@ let zoom = Object.keys(zooms)[0]
 
 <div class:none={!p5 || !hydra}>
 
-  <header class="header">
+  <header class="header" class:active={ p5 && hydra }>
     <div class="actions">
       <System bind:this={system} bind:temp={temp} bind:code={code} on:konsole={onKonsole} on:change={evaluate}  />
       <a href="https://github.com/autr/hydritsi-core" target="_blank" class="mr04">about</a>
