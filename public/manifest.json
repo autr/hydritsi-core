@@ -1,0 +1,34 @@
+{
+  "name": "Hydritsi",
+  "version": "1.0",
+  "description": "Live-coding video chat",
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "permissions": [
+    "webRequest",
+    "activeTab",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking", 
+    "*://*/*"
+  ],
+  "web_accessible_resources": [
+    "index.html",
+    "jitsi-meet/*.js",
+    "build/bundle.css",
+    "build/bundle.js",
+    "libs/hydra-synth.1.3.2.js",
+    "libs/prismjs/prism.css",
+    "libs/prismjs/prism-okaidia.css",
+    "vidicon.png"
+  ],
+	"content_scripts": [
+		{
+			"matches": [ "<all_urls>" ],
+			"js": ["inject.js"]
+		}
+	],
+  "manifest_version": 2
+}
